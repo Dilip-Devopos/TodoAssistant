@@ -8,6 +8,7 @@ pipeline {
         TAG            = "${BUILD_NUMBER}"
         TRIVY_CACHE    = "trivy-cache"
         REPORT_DIR     = "trivy-reports"
+        DOCKER_USER    = "kdilipkumar"  // your Docker Hub username
     }
 
     stages {
@@ -97,11 +98,39 @@ pipeline {
                 archiveArtifacts artifacts: "${REPORT_DIR}/*.html", fingerprint: true
             }
         }
+
+        stage('Docker Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat '''
+                        echo Logging into Docker Hub...
+                        docker login -u %DOCKER_USER% -p %DOCKER_PASS%
+
+                        echo Pushing backend image...
+                        docker tag %BACKEND_IMAGE%:%TAG% %DOCKER_USER%/%BACKEND_IMAGE%:%TAG%
+                        docker push %DOCKER_USER%/%BACKEND_IMAGE%:%TAG%
+
+                        echo Pushing frontend image...
+                        docker tag %FRONTEND_IMAGE%:%TAG% %DOCKER_USER%/%FRONTEND_IMAGE%:%TAG%
+                        docker push %DOCKER_USER%/%FRONTEND_IMAGE%:%TAG%
+
+                        echo Pushing database image...
+                        docker tag %DB_IMAGE%:%TAG% %DOCKER_USER%/%DB_IMAGE%:%TAG%
+                        docker push %DOCKER_USER%/%DB_IMAGE%:%TAG%
+
+                        echo Docker push completed.
+                    '''
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo "Images built & Trivy HTML reports generated. Download from Jenkins artifacts."
+            echo " Images built, Trivy reports generated, and pushed to Docker Hub successfully."
+        }
+        failure {
+            echo " Something failed during build, scan, or push."
         }
     }
 }
