@@ -6,7 +6,6 @@ pipeline {
         FRONTEND_IMAGE = "todosummary/frontend"
         DB_IMAGE       = "todosummary/database"
         TAG            = "${BUILD_NUMBER}"
-        SONAR_HOST_URL = "http://host.docker.internal:9000"
     }
 
     stages {
@@ -18,20 +17,16 @@ pipeline {
             }
         }
 
-        stage('SonarQube Scan - Backend') {
+        stage('SonarQube Analysis - Backend') {
             steps {
-                dir('Backend/todo-summary-assistant') {
-                    withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
+                withSonarQubeEnv('SonarQube') {
+                    dir('Backend/todo-summary-assistant') {
                         bat """
-                            docker run --rm ^
-                              -v %CD%:/usr/src ^
-                              -e SONAR_HOST_URL=%SONAR_HOST_URL% ^
-                              -e SONAR_LOGIN=%SONAR_TOKEN% ^
-                              sonarsource/sonar-scanner-cli ^
-                              -Dsonar.projectKey=TodoAssistantBackend ^
-                              -Dsonar.projectName=TodoAssistant Backend ^
-                              -Dsonar.sources=. ^
-                              -Dsonar.java.binaries=target/classes
+                        sonar-scanner ^
+                          -Dsonar.projectKey=TodoAssistantBackend ^
+                          -Dsonar.projectName=TodoAssistant Backend ^
+                          -Dsonar.sources=. ^
+                          -Dsonar.java.binaries=target/classes
                         """
                     }
                 }
@@ -65,7 +60,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ SonarQube scan & Docker images built successfully"
+            echo "✅ SonarQube analysis & Docker images completed"
         }
         failure {
             echo "❌ Pipeline failed"
