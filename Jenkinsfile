@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     environment {
-        BACKEND_IMAGE  = "todosummary/backend"
-        FRONTEND_IMAGE = "todosummary/frontend"
-        DB_IMAGE       = "todosummary/database"
+        DOCKER_USER    = "kdilipkumar"
         TAG            = "${BUILD_NUMBER}"
+        BACKEND_IMAGE  = "${DOCKER_USER}/todosummary-backend"
+        FRONTEND_IMAGE = "${DOCKER_USER}/todosummary-frontend"
+        DB_IMAGE       = "${DOCKER_USER}/todosummary-database"
         TRIVY_CACHE    = "trivy-cache"
         REPORT_DIR     = "trivy-reports"
-        DOCKER_USER    = "kdilipkumar"
     }
 
     stages {
@@ -107,16 +107,13 @@ pipeline {
                         docker login -u %DOCKER_USER% -p %DOCKER_PASS%
 
                         echo Pushing backend image...
-                        docker tag %BACKEND_IMAGE%:%TAG% %DOCKER_USER%/todosummary-backend:%TAG%
-                        docker push %DOCKER_USER%/todosummary-backend:%TAG%
+                        docker push %BACKEND_IMAGE%:%TAG%
 
                         echo Pushing frontend image...
-                        docker tag %FRONTEND_IMAGE%:%TAG% %DOCKER_USER%/todosummary-frontend:%TAG%
-                        docker push %DOCKER_USER%/todosummary-frontend:%TAG%
+                        docker push %FRONTEND_IMAGE%:%TAG%
 
                         echo Pushing database image...
-                        docker tag %DB_IMAGE%:%TAG% %DOCKER_USER%/todosummary-database:%TAG%
-                        docker push %DOCKER_USER%/todosummary-database:%TAG%
+                        docker push %DB_IMAGE%:%TAG%
 
                         echo Docker push completed.
                     '''
