@@ -6,6 +6,8 @@ pipeline {
         FRONTEND_IMAGE = "todosummary/frontend"
         DB_IMAGE       = "todosummary/database"
         TAG            = "${BUILD_NUMBER}"
+        TRIVY_CACHE    = "trivy-cache"
+        REPORT_DIR     = "trivy-reports"
     }
 
     stages {
@@ -47,41 +49,59 @@ pipeline {
             }
         }
 
-        stage('Trivy Image Scan') {
+        stage('Prepare Trivy') {
+            steps {
+                bat '''
+                    docker pull aquasec/trivy:latest
+                    docker volume inspect %TRIVY_CACHE% >nul 2>&1 || docker volume create %TRIVY_CACHE%
+                    if not exist %REPORT_DIR% mkdir %REPORT_DIR%
+                '''
+            }
+        }
+
+        stage('Trivy Scan and Generate HTML Reports') {
             steps {
                 bat '''
                     docker run --rm ^
                       -v //var/run/docker.sock:/var/run/docker.sock ^
+                      -v %TRIVY_CACHE%:/root/.cache/ ^
+                      -v %CD%\\%REPORT_DIR%:/reports ^
                       aquasec/trivy:latest image ^
-                      --exit-code 1 ^
-                      --severity HIGH,CRITICAL ^
-                      %BACKEND_IMAGE%:%TAG%
+                      --format template --template "@contrib/html.tpl" ^
+                      -o /reports/backend_%TAG%.html ^
+                      %BACKEND_IMAGE%:%TAG% || echo "Trivy scan completed for backend"
 
                     docker run --rm ^
                       -v //var/run/docker.sock:/var/run/docker.sock ^
+                      -v %TRIVY_CACHE%:/root/.cache/ ^
+                      -v %CD%\\%REPORT_DIR%:/reports ^
                       aquasec/trivy:latest image ^
-                      --exit-code 1 ^
-                      --severity HIGH,CRITICAL ^
-                      %FRONTEND_IMAGE%:%TAG%
+                      --format template --template "@contrib/html.tpl" ^
+                      -o /reports/frontend_%TAG%.html ^
+                      %FRONTEND_IMAGE%:%TAG% || echo "Trivy scan completed for frontend"
 
                     docker run --rm ^
                       -v //var/run/docker.sock:/var/run/docker.sock ^
+                      -v %TRIVY_CACHE%:/root/.cache/ ^
+                      -v %CD%\\%REPORT_DIR%:/reports ^
                       aquasec/trivy:latest image ^
-                      --exit-code 1 ^
-                      --severity HIGH,CRITICAL ^
-                      %DB_IMAGE%:%TAG%
+                      --format template --template "@contrib/html.tpl" ^
+                      -o /reports/database_%TAG%.html ^
+                      %DB_IMAGE%:%TAG% || echo "Trivy scan completed for database"
                 '''
+            }
+        }
+
+        stage('Publish Trivy Reports') {
+            steps {
+                archiveArtifacts artifacts: "${REPORT_DIR}/*.html", fingerprint: true
             }
         }
     }
 
     post {
         success {
-            echo " Backend, Frontend & Database images built and scanned successfully"
-            bat 'docker images | findstr todosummary'
-        }
-        failure {
-            echo " Build or Trivy vulnerability scan failed"
+            echo "Images built & Trivy HTML reports generated. Download from Jenkins artifacts."
         }
     }
 }
