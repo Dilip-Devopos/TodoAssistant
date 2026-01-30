@@ -6,10 +6,11 @@ pipeline {
         FRONTEND_IMAGE = "todosummary/frontend"
         DB_IMAGE       = "todosummary/database"
         TAG            = "${BUILD_NUMBER}"
+        SONAR_URL      = "http://localhost:9000"
     }
 
     tools {
-        sonarQube 'sonar-scanner'
+        sonarScanner 'sonar-scanner'
     }
 
     stages {
@@ -21,46 +22,48 @@ pipeline {
             }
         }
 
-        stage('Static Code Analysis') {
-            environment {
-                SONAR_URL = "http://localhost:9000"
-            }
+        stage('Static Code Analysis - SonarQube') {
             steps {
-                withCredentials([string(credentialsId: 'SonarQube', variable: 'sonar-token')]) {
-                    sh '''
-                        cd Backend/todo-summary-assistant
-                        sonar-scanner -Dsonar.projectKey=Guvi-Project-1-prod -Dsonar.sources=. -Dsonar.host.url=${SONAR_URL} -Dsonar.login=${sonar-token}
-                    '''
+                withCredentials([string(credentialsId: 'SonarQube', variable: 'SONAR_TOKEN')]) {
+                    dir('Backend/todo-summary-assistant') {
+                        bat """
+                            sonar-scanner ^
+                            -Dsonar.projectKey=Guvi-Project-1-prod ^
+                            -Dsonar.sources=. ^
+                            -Dsonar.host.url=%SONAR_URL% ^
+                            -Dsonar.login=%SONAR_TOKEN%
+                        """
+                    }
                 }
-            }    
+            }
         }
 
-        stage('Build Backend Image') {
+        stage('Build Backend Docker Image') {
             steps {
                 dir('Backend/todo-summary-assistant') {
-                    bat '''
+                    bat """
                         docker build -t %BACKEND_IMAGE%:%TAG% .
-                    '''
+                    """
                 }
             }
         }
 
-        stage('Build Frontend Image') {
+        stage('Build Frontend Docker Image') {
             steps {
                 dir('Frontend/todo') {
-                    bat '''
+                    bat """
                         docker build -t %FRONTEND_IMAGE%:%TAG% .
-                    '''
+                    """
                 }
             }
         }
 
-        stage('Build Database Image') {
+        stage('Build Database Docker Image') {
             steps {
                 dir('Database') {
-                    bat '''
+                    bat """
                         docker build -t %DB_IMAGE%:%TAG% .
-                    '''
+                    """
                 }
             }
         }
@@ -68,8 +71,8 @@ pipeline {
 
     post {
         success {
-            echo "✅ Sonar scan + Docker images built successfully"
-            bat 'docker images | findstr todosummary'
+            echo "✅ SonarQube scan completed and Docker images built successfully"
+            bat "docker images | findstr todosummary"
         }
         failure {
             echo "❌ Pipeline failed"
