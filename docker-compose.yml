@@ -4,7 +4,7 @@ services:
   mysql:
     build:
       context: ./Database
-    image: kdilipkumar/todosummary-database:27
+    image: kdilipkumar/todosummary-database:30
     container_name: todo-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
@@ -21,7 +21,7 @@ services:
 
   backend:
     build: ./Backend/todo-summary-assistant
-    image: kdilipkumar/todosummary-backend:27
+    image: kdilipkumar/todosummary-backend:30
     container_name: todo-backend
     depends_on:
       mysql:
@@ -37,7 +37,7 @@ services:
 
   frontend:
     build: ./Frontend/todo
-    image: kdilipkumar/todosummary-frontend:27
+    image: kdilipkumar/todosummary-frontend:30
     container_name: todo-frontend
     depends_on:
       - backend
