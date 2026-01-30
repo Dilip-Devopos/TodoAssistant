@@ -107,16 +107,16 @@ pipeline {
                         docker login -u %DOCKER_USER% -p %DOCKER_PASS%
 
                         echo Pushing backend image...
-                        docker tag %BACKEND_IMAGE%:%TAG% %DOCKER_USER%/%BACKEND_IMAGE%:%TAG%
-                        docker push %DOCKER_USER%/%BACKEND_IMAGE%:%TAG%
+                        docker tag %BACKEND_IMAGE%:%TAG% %DOCKER_USER%/todosummary-backend:%TAG%
+                        docker push %DOCKER_USER%/todosummary-backend:%TAG%
 
                         echo Pushing frontend image...
-                        docker tag %FRONTEND_IMAGE%:%TAG% %DOCKER_USER%/%FRONTEND_IMAGE%:%TAG%
-                        docker push %DOCKER_USER%/%FRONTEND_IMAGE%:%TAG%
+                        docker tag %FRONTEND_IMAGE%:%TAG% %DOCKER_USER%/todosummary-frontend:%TAG%
+                        docker push %DOCKER_USER%/todosummary-frontend:%TAG%
 
                         echo Pushing database image...
-                        docker tag %DB_IMAGE%:%TAG% %DOCKER_USER%/%DB_IMAGE%:%TAG%
-                        docker push %DOCKER_USER%/%DB_IMAGE%:%TAG%
+                        docker tag %DB_IMAGE%:%TAG% %DOCKER_USER%/todosummary-database:%TAG%
+                        docker push %DOCKER_USER%/todosummary-database:%TAG%
 
                         echo Docker push completed.
                     '''
