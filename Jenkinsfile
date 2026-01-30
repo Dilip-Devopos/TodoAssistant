@@ -130,7 +130,7 @@ pipeline {
             }
         }
 
-                stage('Update Helm Image Tags') {
+        stage('Update Helm Image Tags') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'github-cred',
@@ -146,11 +146,7 @@ pipeline {
 
                         echo Updating image tags in values.yaml...
 
-                        powershell -Command "(Get-Content values.yaml) `
-                            -replace 'todosummary-backend:\\d+', 'todosummary-backend:%TAG%' `
-                            -replace 'todosummary-frontend:\\d+', 'todosummary-frontend:%TAG%' `
-                            -replace 'todosummary-database:\\d+', 'todosummary-database:%TAG%' |
-                            Set-Content values.yaml"
+                        powershell -Command "(Get-Content 'values.yaml') -replace 'todosummary-backend:\\d+', 'todosummary-backend:%TAG%' -replace 'todosummary-frontend:\\d+', 'todosummary-frontend:%TAG%' -replace 'todosummary-database:\\d+', 'todosummary-database:%TAG%' | Set-Content 'values.yaml'"
 
                         git config user.email "jenkins@local"
                         git config user.name "jenkins"
