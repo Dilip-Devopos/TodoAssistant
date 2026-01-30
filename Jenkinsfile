@@ -12,7 +12,7 @@ pipeline {
         DB_IMAGE       = "todosummary/database"
         TAG            = "${BUILD_NUMBER}"
 
-        SONAR_URL = "http://18.61.24.207:9000"
+        SONAR_URL = "http://localhost:9000"
         DOCKER_CREDS = credentials('docker-cred')
     }
 
@@ -100,12 +100,14 @@ pipeline {
         /* -------------------- PUSH -------------------- */
         stage('Push Images to Docker Hub') {
             steps {
-                docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {
-                    sh '''
-                        docker push ${BACKEND_IMAGE}:${TAG}
-                        docker push ${FRONTEND_IMAGE}:${TAG}
-                        docker push ${DB_IMAGE}:${TAG}
-                    '''
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {
+                        sh"""
+                            docker.image("${BACKEND_IMAGE}:${TAG}").push()
+                            docker.image("${FRONTEND_IMAGE}:${TAG}").push()
+                            docker.image("${DB_IMAGE}:${TAG}").push()
+                        """    
+                    }
                 }
             }
         }
