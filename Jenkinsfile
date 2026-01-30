@@ -46,15 +46,42 @@ pipeline {
                 }
             }
         }
+
+        stage('Trivy Image Scan') {
+            steps {
+                bat '''
+                    docker run --rm ^
+                      -v //var/run/docker.sock:/var/run/docker.sock ^
+                      aquasec/trivy:latest image ^
+                      --exit-code 1 ^
+                      --severity HIGH,CRITICAL ^
+                      %BACKEND_IMAGE%:%TAG%
+
+                    docker run --rm ^
+                      -v //var/run/docker.sock:/var/run/docker.sock ^
+                      aquasec/trivy:latest image ^
+                      --exit-code 1 ^
+                      --severity HIGH,CRITICAL ^
+                      %FRONTEND_IMAGE%:%TAG%
+
+                    docker run --rm ^
+                      -v //var/run/docker.sock:/var/run/docker.sock ^
+                      aquasec/trivy:latest image ^
+                      --exit-code 1 ^
+                      --severity HIGH,CRITICAL ^
+                      %DB_IMAGE%:%TAG%
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo "✅ Backend, Frontend & Database Docker images built successfully"
+            echo " Backend, Frontend & Database images built and scanned successfully"
             bat 'docker images | findstr todosummary'
         }
         failure {
-            echo "❌ Docker image build failed"
+            echo " Build or Trivy vulnerability scan failed"
         }
     }
 }
