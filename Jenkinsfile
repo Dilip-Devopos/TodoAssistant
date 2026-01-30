@@ -34,14 +34,6 @@ pipeline {
             }
         }
 
-        stage('Build Backend Image') {
-            steps {
-                dir('Backend/todo-summary-assistant') {
-                    bat 'docker build -t %BACKEND_IMAGE%:%TAG% .'
-                }
-            }
-        }
-
         /* ================= FRONTEND SONAR ================= */
         stage('SonarQube - Frontend') {
             steps {
@@ -55,6 +47,24 @@ pipeline {
                         -Dsonar.exclusions=node_modules/**
                         '''
                     }
+                }
+            }
+        }
+
+        /* ================= QUALITY GATE ================= */
+        stage('SonarQube Quality Gate') {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        /* ================= BUILD STAGES (ONLY IF SONAR PASSES) ================= */
+        stage('Build Backend Image') {
+            steps {
+                dir('Backend/todo-summary-assistant') {
+                    bat 'docker build -t %BACKEND_IMAGE%:%TAG% .'
                 }
             }
         }
@@ -78,11 +88,11 @@ pipeline {
 
     post {
         success {
-            echo "✅ SonarQube analysis + Docker images built successfully"
-            echo "🔍 Check reports at http://localhost:9000"
+            echo "✅ SonarQube passed → Docker images built successfully"
+            echo "🔍 SonarQube Dashboard: http://localhost:9000"
         }
         failure {
-            echo "❌ Pipeline failed"
+            echo "❌ Pipeline stopped due to SonarQube Quality Gate failure"
         }
     }
 }
