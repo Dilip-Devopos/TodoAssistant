@@ -129,11 +129,44 @@ pipeline {
                 }
             }
         }
+
+                stage('Update Helm Image Tags') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-cred',
+                    usernameVariable: 'GIT_USER',
+                    passwordVariable: 'GIT_PASS'
+                )]) {
+                    bat '''
+                        echo Cloning Helm repository...
+                        rmdir /s /q TodoAssistant-helm 2>nul
+                        git clone https://%GIT_USER%:%GIT_PASS%@github.com/Dilip-Devopos/TodoAssistant-helm.git
+
+                        cd TodoAssistant-helm\\todo-summary-assistant
+
+                        echo Updating image tags in values.yaml...
+
+                        powershell -Command "(Get-Content values.yaml) `
+                            -replace 'todosummary-backend:\\d+', 'todosummary-backend:%TAG%' `
+                            -replace 'todosummary-frontend:\\d+', 'todosummary-frontend:%TAG%' `
+                            -replace 'todosummary-database:\\d+', 'todosummary-database:%TAG%' |
+                            Set-Content values.yaml"
+
+                        git config user.email "jenkins@local"
+                        git config user.name "jenkins"
+
+                        git add values.yaml
+                        git commit -m "Update image tags to %TAG%"
+                        git push origin main
+                    '''
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo "Images built & Trivy HTML reports generated. Download from Jenkins artifacts."
+            echo "Docker images pushed and Helm chart updated with tag ${TAG}"
         }
     }
 }
