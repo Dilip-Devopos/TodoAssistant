@@ -6,7 +6,6 @@ pipeline {
         FRONTEND_IMAGE = "todosummary/frontend"
         DB_IMAGE       = "todosummary/database"
         TAG            = "${BUILD_NUMBER}"
-        SONAR_SCANNER  = tool 'SonarScanner'
     }
 
     stages {
@@ -22,14 +21,14 @@ pipeline {
         stage('SonarQube - Backend') {
             steps {
                 dir('Backend/todo-summary-assistant') {
-                    withSonarQubeEnv('SonarQube-Local') {
-                        bat """
-                        %SONAR_SCANNER%\\bin\\sonar-scanner ^
+                    withSonarQubeEnv('SonarQube') {
+                        bat '''
+                        sonar-scanner ^
                         -Dsonar.projectKey=todo-backend ^
                         -Dsonar.projectName=Todo Backend ^
                         -Dsonar.sources=. ^
                         -Dsonar.java.binaries=target
-                        """
+                        '''
                     }
                 }
             }
@@ -47,14 +46,14 @@ pipeline {
         stage('SonarQube - Frontend') {
             steps {
                 dir('Frontend/todo') {
-                    withSonarQubeEnv('SonarQube-Local') {
-                        bat """
-                        %SONAR_SCANNER%\\bin\\sonar-scanner ^
+                    withSonarQubeEnv('SonarQube') {
+                        bat '''
+                        sonar-scanner ^
                         -Dsonar.projectKey=todo-frontend ^
                         -Dsonar.projectName=Todo Frontend ^
                         -Dsonar.sources=. ^
                         -Dsonar.exclusions=node_modules/**
-                        """
+                        '''
                     }
                 }
             }
@@ -68,7 +67,6 @@ pipeline {
             }
         }
 
-        /* ================= DATABASE ================= */
         stage('Build Database Image') {
             steps {
                 dir('Database') {
@@ -80,9 +78,8 @@ pipeline {
 
     post {
         success {
-            echo "✅ SonarQube analysis & Docker images built successfully"
-            bat 'docker images | findstr todosummary'
-            echo "🔍 Sonar Reports: http://localhost:9000"
+            echo "✅ SonarQube analysis + Docker images built successfully"
+            echo "🔍 Check reports at http://localhost:9000"
         }
         failure {
             echo "❌ Pipeline failed"
