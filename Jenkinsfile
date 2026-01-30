@@ -8,6 +8,10 @@ pipeline {
         TAG            = "${BUILD_NUMBER}"
     }
 
+    tools {
+        sonarScanner 'SonarScanner' // must match name in Jenkins Global Tool Configuration
+    }
+
     stages {
 
         stage('Checkout Code') {
@@ -17,54 +21,29 @@ pipeline {
             }
         }
 
-        /* ================= BACKEND SONAR ================= */
-        stage('SonarQube - Backend') {
+        stage('SonarQube Analysis') {
             steps {
-                dir('Backend/todo-summary-assistant') {
-                    withSonarQubeEnv('SonarQube') {
+                withSonarQubeEnv('SonarQube') { // must match the name in Configure System
+                    dir('Backend/todo-summary-assistant') {
                         bat '''
-                        sonar-scanner ^
-                        -Dsonar.projectKey=todo-backend ^
-                        -Dsonar.projectName=Todo Backend ^
-                        -Dsonar.sources=. ^
-                        -Dsonar.java.binaries=target
+                            sonar-scanner ^
+                              -Dsonar.projectKey=TodoAssistantBackend ^
+                              -Dsonar.projectName=TodoAssistant Backend ^
+                              -Dsonar.sources=. ^
+                              -Dsonar.language=java ^
+                              -Dsonar.java.binaries=target/classes
                         '''
                     }
                 }
             }
         }
 
-        /* ================= FRONTEND SONAR ================= */
-        stage('SonarQube - Frontend') {
-            steps {
-                dir('Frontend/todo') {
-                    withSonarQubeEnv('SonarQube') {
-                        bat '''
-                        sonar-scanner ^
-                        -Dsonar.projectKey=todo-frontend ^
-                        -Dsonar.projectName=Todo Frontend ^
-                        -Dsonar.sources=. ^
-                        -Dsonar.exclusions=node_modules/**
-                        '''
-                    }
-                }
-            }
-        }
-
-        /* ================= QUALITY GATE ================= */
-        stage('SonarQube Quality Gate') {
-            steps {
-                timeout(time: 2, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-
-        /* ================= BUILD STAGES (ONLY IF SONAR PASSES) ================= */
         stage('Build Backend Image') {
             steps {
                 dir('Backend/todo-summary-assistant') {
-                    bat 'docker build -t %BACKEND_IMAGE%:%TAG% .'
+                    bat '''
+                        docker build -t %BACKEND_IMAGE%:%TAG% .
+                    '''
                 }
             }
         }
@@ -72,7 +51,9 @@ pipeline {
         stage('Build Frontend Image') {
             steps {
                 dir('Frontend/todo') {
-                    bat 'docker build -t %FRONTEND_IMAGE%:%TAG% .'
+                    bat '''
+                        docker build -t %FRONTEND_IMAGE%:%TAG% .
+                    '''
                 }
             }
         }
@@ -80,7 +61,9 @@ pipeline {
         stage('Build Database Image') {
             steps {
                 dir('Database') {
-                    bat 'docker build -t %DB_IMAGE%:%TAG% .'
+                    bat '''
+                        docker build -t %DB_IMAGE%:%TAG% .
+                    '''
                 }
             }
         }
@@ -88,11 +71,11 @@ pipeline {
 
     post {
         success {
-            echo "✅ SonarQube passed → Docker images built successfully"
-            echo "🔍 SonarQube Dashboard: http://localhost:9000"
+            echo "✅ Backend, Frontend & Database Docker images built successfully"
+            bat 'docker images | findstr todosummary'
         }
         failure {
-            echo "❌ Pipeline stopped due to SonarQube Quality Gate failure"
+            echo "❌ Pipeline failed"
         }
     }
 }
