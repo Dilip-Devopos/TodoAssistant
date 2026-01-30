@@ -21,17 +21,18 @@ pipeline {
             }
         }
 
-        stage('SonarQube Scan') {
+        stage('Static Code Analysis') {
+            environment {
+                SONAR_URL = "http://localhost:9000"
+            }
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    bat '''
-                        sonar-scanner ^
-                        -Dsonar.projectKey=todo-summary-app ^
-                        -Dsonar.projectName=TodoSummaryApp ^
-                        -Dsonar.sources=.
+                withCredentials([string(credentialsId: 'SonarQube', variable: 'sonar-token')]) {
+                    sh '''
+                        cd Backend/todo-summary-assistant
+                        sonar-scanner -Dsonar.projectKey=Guvi-Project-1-prod -Dsonar.sources=. -Dsonar.host.url=${SONAR_URL} -Dsonar.login=${sonar-token}
                     '''
                 }
-            }
+            }    
         }
 
         stage('Build Backend Image') {
