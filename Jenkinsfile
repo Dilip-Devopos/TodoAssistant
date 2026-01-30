@@ -162,7 +162,7 @@ pipeline {
 
     post {
         success {
-            echo "Docker images pushed and Helm chart updated with tag ${TAG}"
+            echo "Docker images pushed and Helm chart updated with tag ${TAG}" 
         }
     }
 }
