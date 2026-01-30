@@ -49,6 +49,15 @@ pipeline {
                 }
             }
         }
+        
+        stage('Clean Previous Reports') {
+            steps {
+                bat '''
+                    if exist %REPORT_DIR% rmdir /s /q %REPORT_DIR%
+                '''
+            }
+        }
+        
 
         stage('Prepare Trivy') {
             steps {
