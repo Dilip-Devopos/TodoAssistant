@@ -8,12 +8,9 @@ pipeline {
         TAG            = "${BUILD_NUMBER}"
     }
 
-    tools {
-        sonarScanner 'SonarScanner' // must match name in Jenkins Global Tool Configuration
-    }
-
     stages {
 
+        // --------------------------------------
         stage('Checkout Code') {
             steps {
                 git branch: 'main',
@@ -21,9 +18,10 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+        // --------------------------------------
+        stage('SonarQube Analysis - Backend') {
             steps {
-                withSonarQubeEnv('SonarQube') { // must match the name in Configure System
+                withSonarQubeEnv('SonarQube') { // Must match Jenkins Configure System
                     dir('Backend/todo-summary-assistant') {
                         bat '''
                             sonar-scanner ^
@@ -38,6 +36,40 @@ pipeline {
             }
         }
 
+        // Optional: Quality Gate check for Backend
+        stage('Quality Gate - Backend') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        // --------------------------------------
+        stage('SonarQube Analysis - Frontend') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    dir('Frontend/todo') {
+                        bat '''
+                            sonar-scanner ^
+                              -Dsonar.projectKey=TodoAssistantFrontend ^
+                              -Dsonar.projectName=TodoAssistant Frontend ^
+                              -Dsonar.sources=.
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate - Frontend') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        // --------------------------------------
         stage('Build Backend Image') {
             steps {
                 dir('Backend/todo-summary-assistant') {
@@ -67,7 +99,8 @@ pipeline {
                 }
             }
         }
-    }
+
+    } // stages
 
     post {
         success {
