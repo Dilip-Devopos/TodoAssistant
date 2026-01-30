@@ -8,7 +8,7 @@ pipeline {
         TAG            = "${BUILD_NUMBER}"
         TRIVY_CACHE    = "trivy-cache"
         REPORT_DIR     = "trivy-reports"
-        DOCKER_USER    = "kdilipkumar"  // your Docker Hub username
+        DOCKER_USER    = "kdilipkumar"
     }
 
     stages {
@@ -127,10 +127,7 @@ pipeline {
 
     post {
         success {
-            echo " Images built, Trivy reports generated, and pushed to Docker Hub successfully."
-        }
-        failure {
-            echo " Something failed during build, scan, or push."
+            echo "Images built & Trivy HTML reports generated. Download from Jenkins artifacts."
         }
     }
 }
