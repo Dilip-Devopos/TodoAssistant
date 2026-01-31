@@ -17,7 +17,37 @@ TodoAssistant is a production-ready TODO management application that demonstrate
 
 ## 🏗️ Architecture
 
+### Deployment Workflow
+The automated CI/CD pipeline follows this flow:
+Git Push → Jenkins Pipeline Trigger → Build Docker Images → Trivy Security Scan → Push to DockerHub → Dynamic Helm Chart Tag Update → ArgoCD Sync → Rancher Cluster Deployment
+
+Pipeline Stages
+Git Push: Code changes pushed to the repository automatically trigger the Jenkins pipeline
+Build Docker Images: Jenkins builds container images for frontend and backend services
+Trivy Security Scan: Automated vulnerability scanning of Docker images before deployment
+DockerHub Push: Verified images are pushed to DockerHub registry with version tags
+Dynamic Helm Chart Update: Pipeline automatically updates image tags in Helm chart values
+ArgoCD Synchronization: ArgoCD detects the Helm chart changes and syncs with the cluster
+Rancher Cluster Deployment: Application is deployed to the Kubernetes cluster managed by Rancher
+
+### Pipeline Configuration
+The Jenkins pipeline automates the entire deployment workflow, ensuring:
+
+Automated security scanning with Trivy before deployment
+Consistent builds across environments
+Automated testing and validation
+Version-controlled deployments with dynamic tagging
+GitOps-based continuous delivery via ArgoCD
+Rollback capabilities through Helm
+Integration with container registries
+
 - Browser -> Ingress(Nginx) -> frontend Service -> frontend Pod -> backend Service -> backend Pod -> Mysql Service (Headless) -> Mysql pod.
+
+###  Helm Commands
+
+- helm uninstall todo-app -n default
+- helm install todo-app .\todo-summary-assistant\
+- kubectl create secret generic backend-secrets --namespace todo-app --from-literal=COHERE_API_KEY="Api-key" --from-literal=SLACK_WEBHOOK_URL="Slack-key"
 
 ```
 TodoAssistant/
@@ -364,6 +394,16 @@ localhost:3000
 ### Dockerhub
 
 <img width="1920" height="955" alt="image" src="https://github.com/user-attachments/assets/0a1ba2ac-54ad-4e7e-91b1-cc85010f1c57" />
+
+### Monitoring
+
+<img width="1910" height="988" alt="image" src="https://github.com/user-attachments/assets/323aea21-935c-4081-9bbf-8164399a2644" />
+
+<img width="1920" height="863" alt="image" src="https://github.com/user-attachments/assets/e4a380ff-3a25-4eab-90a2-51432c26bdc4" />
+
+
+
+
 
 
 
