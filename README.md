@@ -156,7 +156,7 @@ The Jenkins pipeline automates the entire deployment workflow, ensuring:
 
 ### Prerequisites for Kubernetes Deployment
 
-- Kubernetes cluster (Rancher Desktop, Minikube, EKS, GKE, AKS, etc.)
+- Kubernetes cluster (Rancher Desktop)
 - Helm 3+ CLI installed
 - Docker registry access (Docker Hub, GitHub Container Registry)
 - Kubernetes namespace created (e.g., `todo-app`)
@@ -267,9 +267,7 @@ The `docker-compose.yml` file orchestrates:
 
 Consider implementing:
 - Application logging (Logback/SLF4J for backend)
-- Centralized log aggregation (ELK stack, Loki)
 - Performance monitoring (Prometheus, Grafana)
-- Health check endpoints
 - Kubernetes liveness and readiness probes
 
 ## 🤝 Contributing
