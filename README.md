@@ -387,6 +387,9 @@ localhost:3000
 
 <img width="1920" height="997" alt="image" src="https://github.com/user-attachments/assets/700f2626-f356-4650-951c-0bdc034fdd54" />
 
+<img width="1919" height="369" alt="image" src="https://github.com/user-attachments/assets/445f33ab-404d-4e73-a877-50810fe0b352" />
+
+
 ### Argocd
 
 <img width="1920" height="896" alt="image" src="https://github.com/user-attachments/assets/4a5d81a1-cd8e-4c5b-aadb-cd0f74edac28" />
