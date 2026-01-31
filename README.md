@@ -17,6 +17,8 @@ TodoAssistant is a production-ready TODO management application that demonstrate
 
 ## 🏗️ Architecture
 
+- Browser -> Ingress(Nginx) -> frontend Service -> frontend Pod -> backend Service -> backend Pod -> Mysql Service (Headless) -> Mysql pod.
+
 ```
 TodoAssistant/
 ├── Backend/todo-summary-assistant/    # Spring Boot REST API
@@ -343,6 +345,9 @@ localhost:3000
 <img width="1916" height="812" alt="image" src="https://github.com/user-attachments/assets/b6e84900-c59d-4253-85a8-be6913cc88a0" />
 
 <img width="1920" height="799" alt="image" src="https://github.com/user-attachments/assets/a001f9ca-f990-4c2d-a04b-cbded342fa4f" />
+
+<img width="1920" height="690" alt="image" src="https://github.com/user-attachments/assets/b7956abf-7711-4c45-8bf1-51bbc78268ec" />
+
 
 ### Slack 
 
